@@ -6,7 +6,9 @@
 const initialMapAddress = "Firenze, Italy";
 
 // Search radius (in meters) used to limit Google Places API search results.
-const searchRadius = 7000; 
+const searchRadius = 4000; 
+
+const mapZoom = 15;
 
 // Variable initialMapLatLng will hold the geocode for the initialMapAdress.
 var initialMapLatLng = '';
@@ -42,7 +44,7 @@ function initMap() {
             map = new google.maps.Map($("#map")[0],
             {
                 center: initialMapLatLng,
-                zoom: 16
+                zoom: mapZoom
             });
 
             setPointsOfInterest(initialMapLatLng);
@@ -68,6 +70,7 @@ function setPointsOfInterest(initialMapLatLng){
                                       result.name));
             });
             setMarkers(places);
+            resizeMapArea();
         } else {
             alert('Place API failed to respond. Unable to retrieve points of interest near ' + initialMapAddress);
         }
@@ -83,6 +86,21 @@ function setMarkers(places){
             title: place.name
         });
     });
+}
+
+// This function is used to resize the Map area properly. It fixes 
+// Google Maps' div element being rendered with its height property set to 0
+// when using Bootstrap.
+function resizeMapArea() {
+    $(window).resize(function () {
+        var windowHeight = $(window).height(),
+            // 'topOffset' is used to avoid rendering a 
+            // vertical scrollbar on the right side of the webpage.
+            // Change this value as needed.
+            topOffset = 57; 
+    
+        $('#map').css('height', (windowHeight - topOffset));
+    }).resize();
 }
 
 // Application ViewModel
