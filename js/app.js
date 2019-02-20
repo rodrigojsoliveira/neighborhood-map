@@ -14,14 +14,12 @@ const mapZoom = 15;
 var initialMapLatLng = '';
 var map;
 var geocoder;
-var places = [];
+var places = ko.observableArray();
 
 // Defines the properties of a place
-var Place = function(lat, lng, name){
-    this.lat = lat;
-    this.lng = lng;
+var Place = function(latitude, longitude, name){
     this.name = name;
-    this.location = {lat: this.lat, lng: this.lng}
+    this.location = {lat: latitude, lng: longitude}
 }
 
 // Callback function used by Google Maps API to initialize the map area.
@@ -46,8 +44,8 @@ function initMap() {
                 center: initialMapLatLng,
                 zoom: mapZoom
             });
-
             setPointsOfInterest(initialMapLatLng);
+            resizeMapArea();
         } else {
             alert('Geocoding API failed to geocode ' + initialMapAddress);
         }
@@ -65,12 +63,12 @@ function setPointsOfInterest(initialMapLatLng){
     placesService.nearbySearch(request, function(results, status){
         if (status == 'OK') {
             $.each(results, function(index, result){
-                places.push(new Place(result.geometry.location.lat(),
-                                      result.geometry.location.lng(),
-                                      result.name));
+                var place = new Place(result.geometry.location.lat(),
+                                                result.geometry.location.lng(),
+                                                result.name);
+                places.push({name: place.name, location: place.location});
             });
             setMarkers(places);
-            resizeMapArea();
         } else {
             alert('Place API failed to respond. Unable to retrieve points of interest near ' + initialMapAddress);
         }
@@ -79,7 +77,7 @@ function setPointsOfInterest(initialMapLatLng){
 
 // Set markers representing each point of interest on the map.
 function setMarkers(places){
-    $.each(places, function(index, place){
+    $.each(places(), function(index, place){
         var marker = new google.maps.Marker({
             position: place.location,
             map: map,
@@ -104,11 +102,14 @@ function resizeMapArea() {
 }
 
 // Application ViewModel
-var appViewModel = function(){
-    this.places = places;    
+var appViewModel = {
+    neighborhood: initialMapAddress,
+    myPlaces: ko.observableArray(places())
 };
 
 // Activate knockout.js using JQuery, which will load Knockout after the DOM has finished loading.
 jQuery(function($){
-    ko.applyBindings(new appViewModel());
+    ko.applyBindings(appViewModel);
 });
+
+
