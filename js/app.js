@@ -104,7 +104,10 @@ function resizeMapArea() {
 // Application ViewModel
 var appViewModel = {
     neighborhood: initialMapAddress,
-    myPlaces: ko.observableArray(places())
+    myPlaces: ko.observableArray(places()),
+    setMapCenter: function(place) {
+        map.setCenter(place.location);
+    }
 };
 
 // Activate knockout.js using JQuery, which will load Knockout after the DOM has finished loading.

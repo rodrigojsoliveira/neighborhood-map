@@ -22,7 +22,7 @@
         <div class="row" id="main-container">
             <div id="list-view" class="col-md-3">
                 <div class="list-group" data-bind="foreach: places">
-                    <a href="#" class="list-group-item list-group-item-action" data-bind="text: name"></a>
+                    <a class="list-group-item list-group-item-action" data-bind="text: name, click: $parent.setMapCenter"></a>
                 </div>
             </div>
             <div id="map-container" class="col-md-9">
