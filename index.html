@@ -20,9 +20,18 @@
             </nav>
         </header>
         <div class="row" id="main-container">
-            <div id="list-view" class="col-md-3">
-                <div class="list-group" data-bind="foreach: places">
-                    <a class="list-group-item list-group-item-action" data-bind="text: name, click: $parent.setMapCenter"></a>
+            <div class="col-md-3" id="list-area">
+                <div class="row input-group" id="list-filter">
+                    <input data-bind="textInput: searchString" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <button class="btn btn-dark">Filter</button>
+                    </div>
+                    
+                </div>
+                <div class="row" id="list-places">
+                    <div class="list-group" data-bind="foreach: filteredList">
+                        <a class="list-group-item list-group-item-action" data-bind="text: name, click: $parent.setMapCenter"></a>
+                    </div>
                 </div>
             </div>
             <div id="map-container" class="col-md-9">

@@ -10,12 +10,6 @@ const searchRadius = 4000;
 
 const mapZoom = 15;
 
-// Variable initialMapLatLng will hold the geocode for the initialMapAdress.
-var initialMapLatLng = '';
-var map;
-var geocoder;
-var places = ko.observableArray();
-
 // Defines the properties of a place
 var Place = function(latitude, longitude, name){
     this.name = name;
@@ -26,25 +20,26 @@ var Place = function(latitude, longitude, name){
 function initMap() {
     // Create Geocoder object to convert 'initialMapAddress'
     // into lat/lng values.
-    geocoder = new google.maps.Geocoder();
+    var geocoder = new google.maps.Geocoder();
     
     // Get the lat/lng values for 'initialMapAddress'.
     geocoder.geocode({
         address: initialMapAddress
     }, function(results, status){
         if (status == 'OK') {
+            // Variable initialMapLatLng will hold the geocode for the initialMapAdress.
             // Set initialMapLatLng with retrieved values.
-            initialMapLatLng = results[0].geometry.location;
+            var initialMapLatLng = results[0].geometry.location;
 
             // Since JQuery´s id selector returns a collection and the Map
             // class receives an HTML element, we must use [0] to select the
             // first element of the colletion.
-            map = new google.maps.Map($("#map")[0],
+            var map = new google.maps.Map($("#map")[0],
             {
                 center: initialMapLatLng,
                 zoom: mapZoom
             });
-            setPointsOfInterest(initialMapLatLng);
+            setPointsOfInterest(initialMapLatLng, map);
             resizeMapArea();
         } else {
             alert('Geocoding API failed to geocode ' + initialMapAddress);
@@ -53,7 +48,7 @@ function initMap() {
 }
 
 // Retrieves a list of places near the specified Lat/Lng location.
-function setPointsOfInterest(initialMapLatLng){
+function setPointsOfInterest(initialMapLatLng, map){
     var placesService = new google.maps.places.PlacesService(map);
     var request = {
         location: initialMapLatLng,
@@ -62,13 +57,16 @@ function setPointsOfInterest(initialMapLatLng){
     };
     placesService.nearbySearch(request, function(results, status){
         if (status == 'OK') {
+            var places = [];
             $.each(results, function(index, result){
                 var place = new Place(result.geometry.location.lat(),
                                                 result.geometry.location.lng(),
                                                 result.name);
                 places.push({name: place.name, location: place.location});
             });
-            setMarkers(places);
+            setMarkers(places, map);
+            // Initialize Knockout after all asynchronous calls are done.
+            ko.applyBindings(new appViewModel(places, map));
         } else {
             alert('Place API failed to respond. Unable to retrieve points of interest near ' + initialMapAddress);
         }
@@ -76,8 +74,8 @@ function setPointsOfInterest(initialMapLatLng){
 }
 
 // Set markers representing each point of interest on the map.
-function setMarkers(places){
-    $.each(places(), function(index, place){
+function setMarkers(places, map){
+    $.each(places, function(index, place){
         var marker = new google.maps.Marker({
             position: place.location,
             map: map,
@@ -102,17 +100,28 @@ function resizeMapArea() {
 }
 
 // Application ViewModel
-var appViewModel = {
-    neighborhood: initialMapAddress,
-    myPlaces: ko.observableArray(places()),
-    setMapCenter: function(place) {
+var appViewModel = function(places, map){
+    var self = this;
+    self.neighborhood = initialMapAddress;
+    self.myPlaces = ko.observableArray(places);
+    self.searchString = ko.observable();
+    self.setMapCenter = function(place) {
         map.setCenter(place.location);
+    };
+    self.filteredList = ko.computed(function(){
+        if (!self.searchString()) {
+            return self.myPlaces();
+        } else {
+            return ko.utils.arrayFilter(self.myPlaces(), function(place){
+                return place.name.toLowerCase().includes(self.searchString().toLowerCase());
+            })
+        }
+    });
+    self.setFilter = function(userInput){
+        console.log(userInput);
+        self.searchString(userInput);
+        //set filtered markers
     }
 };
-
-// Activate knockout.js using JQuery, which will load Knockout after the DOM has finished loading.
-jQuery(function($){
-    ko.applyBindings(appViewModel);
-});
 
 
