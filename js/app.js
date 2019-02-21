@@ -81,6 +81,15 @@ function setMarkers(places, map){
             map: map,
             title: place.name
         });
+        // Set a 'marker' property for each place.
+        place.marker = marker;
+    });
+}
+
+// Shows all marker on map.
+function showAllMarkers(places, map) {
+    $.each(places, function(index, place){
+        place.marker.setMap(map);
     });
 }
 
@@ -107,21 +116,22 @@ var appViewModel = function(places, map){
     self.searchString = ko.observable();
     self.setMapCenter = function(place) {
         map.setCenter(place.location);
+        setMarkers(self.myPlaces);
     };
     self.filteredList = ko.computed(function(){
         if (!self.searchString()) {
+            showAllMarkers(self.myPlaces(), map);
             return self.myPlaces();
+
         } else {
             return ko.utils.arrayFilter(self.myPlaces(), function(place){
+                if (!place.name.toLowerCase().includes(self.searchString().toLowerCase())){
+                    place.marker.setMap(null);
+                }
                 return place.name.toLowerCase().includes(self.searchString().toLowerCase());
             })
         }
     });
-    self.setFilter = function(userInput){
-        console.log(userInput);
-        self.searchString(userInput);
-        //set filtered markers
-    }
 };
 
 
