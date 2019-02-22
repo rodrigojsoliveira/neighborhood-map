@@ -84,6 +84,10 @@ function setMarkers(places, map){
             title: place.name
         });
         // Set a 'marker' property for each place.
+        marker.addListener('click', function(){
+            map.panTo(marker.getPosition());
+            toggleMarkerAnimation(marker);
+        })
         place.marker = marker;
     });
 }
