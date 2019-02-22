@@ -95,6 +95,17 @@ function showAllMarkers(places, map) {
     });
 }
 
+function toggleMarkerAnimation(marker) {
+    if (marker.getAnimation() !== null) {
+        marker.setAnimation(null);
+    } else {
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(function(){
+            marker.setAnimation(null);
+        }, 1500);
+    }
+}
+
 // This function is used to resize the Map area properly. It fixes 
 // Google Maps' div element being rendered with its height property set to 0
 // when using Bootstrap.
@@ -116,9 +127,9 @@ var appViewModel = function(places, map){
     self.neighborhood = initialMapAddress;
     self.myPlaces = ko.observableArray(places);
     self.searchString = ko.observable();
-    self.setMapCenter = function(place) {
+    self.focusMarker = function(place) {
         map.setCenter(place.location);
-        setMarkers(self.myPlaces);
+        toggleMarkerAnimation(place.marker);
     };
     self.filteredList = ko.computed(function(){
         if (!self.searchString()) {
