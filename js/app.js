@@ -14,6 +14,7 @@ const mapZoom = 15;
 var Place = function(latitude, longitude, name){
     this.name = name;
     this.location = {lat: latitude, lng: longitude}
+    this.marker;
 }
 
 // Callback function used by Google Maps API to initialize the map area.
@@ -77,8 +78,9 @@ function setPointsOfInterest(initialMapLatLng, map){
 function setMarkers(places, map){
     $.each(places, function(index, place){
         var marker = new google.maps.Marker({
-            position: place.location,
             map: map,
+            animation: google.maps.Animation.DROP,
+            position: place.location,
             title: place.name
         });
         // Set a 'marker' property for each place.
@@ -122,7 +124,6 @@ var appViewModel = function(places, map){
         if (!self.searchString()) {
             showAllMarkers(self.myPlaces(), map);
             return self.myPlaces();
-
         } else {
             return ko.utils.arrayFilter(self.myPlaces(), function(place){
                 if (!place.name.toLowerCase().includes(self.searchString().toLowerCase())){
