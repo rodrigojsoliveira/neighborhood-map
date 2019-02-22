@@ -128,7 +128,7 @@ var appViewModel = function(places, map){
     self.myPlaces = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusMarker = function(place) {
-        map.setCenter(place.location);
+        map.panTo(place.location);
         toggleMarkerAnimation(place.marker);
     };
     self.filteredList = ko.computed(function(){
