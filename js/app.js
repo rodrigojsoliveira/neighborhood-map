@@ -1,103 +1,167 @@
 // ******* Constants and Global Variables *******
 
-// Set the 'initialMapAddress' string to any valid location or address.
+// Set the 'INITIAL_MAP_ADDRESS' string to any valid location or address.
 // This allows developers to configure the initial map position. Points of
 // interest will be located close to this location.
-const initialMapAddress = "Firenze, Italy";
+const INITIAL_MAP_ADDRESS = "Firenze, Italy";
 
 // Search radius (in meters) used to limit Google Places API search results.
-const searchRadius = 4000; 
-
-const mapZoom = 15;
+const SEARCH_RADIUS = 4000; 
+const MAP_ZOOM = 15;
+const FOURSQUARE_API_VERSION = 20190223;
+const FOURSQUARE_CLIENT_ID = 'MHIUE3JSG2LWINMXBLQX1PDXJ2NOIQDLZOW2ZCQ2NKDFJNB4';
+const FOURSQUARE_CLIENT_SECRET = 'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
+var map;
 
 // Defines the properties of a place
-var Place = function(latitude, longitude, name){
+var Place = function(id, name, latitude, longitude){
+    this.id = id;
     this.name = name;
-    this.location = {lat: latitude, lng: longitude}
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.photos = [];
+    this.getLocation = function(){
+        return {lat: this.latitude, lng: this.longitude};
+    };
+    this.getMarkerInfo = function() {
+        return {name: this.name, location: this.getLocation(), photos: this.photos};
+    };
     this.marker;
-}
+};
 
 // Callback function used by Google Maps API to initialize the map area.
 function initMap() {
-    // Create Geocoder object to convert 'initialMapAddress'
+    // Create Geocoder object to convert 'INITIAL_MAP_ADDRESS'
     // into lat/lng values.
     var geocoder = new google.maps.Geocoder();
     
-    // Get the lat/lng values for 'initialMapAddress'.
+    // Get the lat/lng values for 'INITIAL_MAP_ADDRESS'.
     geocoder.geocode({
-        address: initialMapAddress
+        address: INITIAL_MAP_ADDRESS
     }, function(results, status){
         if (status == 'OK') {
             // Variable initialMapLatLng will hold the geocode for the initialMapAdress.
             // Set initialMapLatLng with retrieved values.
             var initialMapLatLng = results[0].geometry.location;
-
+            
             // Since JQuery´s id selector returns a collection and the Map
             // class receives an HTML element, we must use [0] to select the
             // first element of the colletion.
-            var map = new google.maps.Map($("#map")[0],
+            map = new google.maps.Map($("#map")[0],
             {
                 center: initialMapLatLng,
-                zoom: mapZoom
+                zoom: MAP_ZOOM
             });
-            setPointsOfInterest(initialMapLatLng, map);
+            getPointsOfInterest();
             resizeMapArea();
         } else {
-            alert('Geocoding API failed to geocode ' + initialMapAddress);
+            alert('Geocoding API failed to geocode ' + INITIAL_MAP_ADDRESS);
         }
     });    
-}
+};
 
-// Retrieves a list of places near the specified Lat/Lng location.
-function setPointsOfInterest(initialMapLatLng, map){
-    var placesService = new google.maps.places.PlacesService(map);
-    var request = {
-        location: initialMapLatLng,
-        radius: searchRadius,
-        type: ['museum']
-    };
-    placesService.nearbySearch(request, function(results, status){
-        if (status == 'OK') {
+function getPointsOfInterest(){
+    // Foursquare Search for Venues API call.
+    var searchUrl = 'https://api.foursquare.com/v2/venues/search';
+    jQuery.ajax({
+        url: searchUrl,
+        data: {
+            near: INITIAL_MAP_ADDRESS,
+            radius: SEARCH_RADIUS,
+            limit: 30,
+            v: FOURSQUARE_API_VERSION,
+            categoryId: '4d4b7104d754a06370d81259',
+            client_id: FOURSQUARE_CLIENT_ID,
+            client_secret: FOURSQUARE_CLIENT_SECRET
+        },
+        dataType: 'json',
+        error: function() {
+            alert('Foursquare API failed to return venues.');
+        },
+        success: function(data) {
             var places = [];
-            $.each(results, function(index, result){
-                var place = new Place(result.geometry.location.lat(),
-                                                result.geometry.location.lng(),
-                                                result.name);
-                places.push({name: place.name, location: place.location});
+            $.each(data.response.venues, function(index, venue){
+                var place = new Place(venue.id,
+                                      venue.name,
+                                      venue.location.lat,
+                                      venue.location.lng);
+                places.push(place);
             });
-            setMarkers(places, map);
+            setMarkers(places);
             // Initialize Knockout after all asynchronous calls are done.
             ko.applyBindings(new appViewModel(places, map));
-        } else {
-            alert('Place API failed to respond. Unable to retrieve points of interest near ' + initialMapAddress);
         }
     });
-}
+};
+
+function getPhotos(placeId) {
+    // Foursquare Search for Venues API call.
+    var searchUrl = 'https://api.foursquare.com/v2/venues/' + placeId + '/photos';
+    jQuery.ajax({
+        url: searchUrl,
+        data: {
+            limit: 10,
+            v: FOURSQUARE_API_VERSION,
+            client_id: FOURSQUARE_CLIENT_ID,
+            client_secret: FOURSQUARE_CLIENT_SECRET
+        },
+        dataType: 'json',
+        error: function() {
+            alert('Foursquare API failed to return venue photos.');
+            return [];
+        },
+        success: function(data) {
+            var photos = [];
+            $.each(data.response.photos.items, function(index, item){
+                var prefix = item.prefix;
+                var suffix = item.suffix;
+                var size = '100x36';
+                var photoURL = prefix + size + suffix;
+                photos.push(photoURL);
+            });
+            return photos;
+        }
+    });
+};
 
 // Set markers representing each point of interest on the map.
-function setMarkers(places, map){
+function setMarkers(places){
     $.each(places, function(index, place){
         var marker = new google.maps.Marker({
             map: map,
             animation: google.maps.Animation.DROP,
-            position: place.location,
+            position: place.getLocation(),
             title: place.name
         });
-        // Set a 'marker' property for each place.
+        //Create a click listener for the marker.
         marker.addListener('click', function(){
             map.panTo(marker.getPosition());
             toggleMarkerAnimation(marker);
+
+            if(place.photos.length == 0) {
+                place.photos = getPhotos(place.id);
+            };
+
+            var infoWindowContent = '<h6>' + place.name + '</h6>' +
+                '<img src="' + place.photos[0] + '" alt="Location image" />';
+
+            var infowindow = new google.maps.InfoWindow({
+                content: infoWindowContent
+            });
+            
+            infowindow.open(map, marker);
         })
+        // Set a 'marker' property for each place.
         place.marker = marker;
     });
-}
+};
 
 // Shows all marker on map.
 function showAllMarkers(places, map) {
     $.each(places, function(index, place){
         place.marker.setMap(map);
     });
-}
+};
 
 function toggleMarkerAnimation(marker) {
     if (marker.getAnimation() !== null) {
@@ -107,8 +171,8 @@ function toggleMarkerAnimation(marker) {
         setTimeout(function(){
             marker.setAnimation(null);
         }, 1500);
-    }
-}
+    };
+};
 
 // This function is used to resize the Map area properly. It fixes 
 // Google Maps' div element being rendered with its height property set to 0
@@ -123,24 +187,24 @@ function resizeMapArea() {
     
         $('#map').css('height', (windowHeight - topOffset));
     }).resize();
-}
+};
 
 // Application ViewModel
 var appViewModel = function(places, map){
     var self = this;
-    self.neighborhood = initialMapAddress;
-    self.myPlaces = ko.observableArray(places);
+    self.neighborhood = INITIAL_MAP_ADDRESS;
+    self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
-    self.focusMarker = function(place) {
-        map.panTo(place.location);
+    self.focusOnMarker = function(place) {
+        map.panTo(place.getLocation());
         toggleMarkerAnimation(place.marker);
     };
     self.filteredList = ko.computed(function(){
         if (!self.searchString()) {
-            showAllMarkers(self.myPlaces(), map);
-            return self.myPlaces();
+            showAllMarkers(self.placeList(), map);
+            return self.placeList();
         } else {
-            return ko.utils.arrayFilter(self.myPlaces(), function(place){
+            return ko.utils.arrayFilter(self.placeList(), function(place){
                 if (!place.name.toLowerCase().includes(self.searchString().toLowerCase())){
                     place.marker.setMap(null);
                 }
@@ -149,5 +213,3 @@ var appViewModel = function(places, map){
         }
     });
 };
-
-
