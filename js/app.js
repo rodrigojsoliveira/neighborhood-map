@@ -68,7 +68,7 @@ function getPointsOfInterest(){
         data: {
             near: INITIAL_MAP_ADDRESS,
             radius: SEARCH_RADIUS,
-            limit: 30,
+            limit: 5,
             v: FOURSQUARE_API_VERSION,
             categoryId: '4d4b7104d754a06370d81259',
             client_id: FOURSQUARE_CLIENT_ID,
@@ -86,6 +86,7 @@ function getPointsOfInterest(){
                                       venue.location.lat,
                                       venue.location.lng);
                 places.push(place);
+                setPlacePhotos(place);
             });
             setMarkers(places);
             // Initialize Knockout after all asynchronous calls are done.
@@ -94,13 +95,13 @@ function getPointsOfInterest(){
     });
 };
 
-function getPhotos(placeId) {
+function setPlacePhotos(place) {
     // Foursquare Search for Venues API call.
-    var searchUrl = 'https://api.foursquare.com/v2/venues/' + placeId + '/photos';
+    var searchUrl = 'https://api.foursquare.com/v2/venues/' + place.id + '/photos';
     jQuery.ajax({
         url: searchUrl,
         data: {
-            limit: 10,
+            limit: 1,
             v: FOURSQUARE_API_VERSION,
             client_id: FOURSQUARE_CLIENT_ID,
             client_secret: FOURSQUARE_CLIENT_SECRET
@@ -108,18 +109,17 @@ function getPhotos(placeId) {
         dataType: 'json',
         error: function() {
             alert('Foursquare API failed to return venue photos.');
-            return [];
         },
         success: function(data) {
             var photos = [];
             $.each(data.response.photos.items, function(index, item){
                 var prefix = item.prefix;
                 var suffix = item.suffix;
-                var size = '100x36';
+                var size = '300x100';
                 var photoURL = prefix + size + suffix;
                 photos.push(photoURL);
             });
-            return photos;
+            place.photos = photos;
         }
     });
 };
@@ -137,10 +137,6 @@ function setMarkers(places){
         marker.addListener('click', function(){
             map.panTo(marker.getPosition());
             toggleMarkerAnimation(marker);
-
-            if(place.photos.length == 0) {
-                place.photos = getPhotos(place.id);
-            };
 
             var infoWindowContent = '<h6>' + place.name + '</h6>' +
                 '<img src="' + place.photos[0] + '" alt="Location image" />';
