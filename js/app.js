@@ -13,6 +13,7 @@ const FOURSQUARE_API_VERSION = 20190223;
 const FOURSQUARE_CLIENT_ID = 'MHIUE3JSG2LWINMXBLQX1PDXJ2NOIQDLZOW2ZCQ2NKDFJNB4';
 const FOURSQUARE_CLIENT_SECRET = 'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
 var map;
+var lastOpenedInfoWindow;
 
 // Defines the properties of a place
 var Place = function(id, name, latitude, longitude){
@@ -105,66 +106,6 @@ function getFoursquareVenues(){
     });
 };
 
-// function getWikipediaPageIds(places){
-//     var searchUrl = 'https://en.wikipedia.org/w/api.php'
-//     $.each(places, function(index, place){
-//         jQuery.ajax({
-//             url: searchUrl,
-//             data: {
-//                 action: 'query',
-//                 list: 'allpages',
-//                 format: 'json',
-//                 aplimit: 5,
-//                 apprefix: place.name,
-//                 origin: '*'
-//             },
-//             error: function() {
-//                 alert('Wikipedia API failed to return place information.');
-//             },
-//             success: function(data) {
-//                 if (data.query.allpages.length > 1) {
-//                     $.each(data.query.allpages, function(index, page){
-//                         if(page.title.toLowerCase().includes(MAP_CITY.toLowerCase())){
-//                             place.pageId = data.query.allpages[0].pageid;
-//                             return false;        
-//                         };
-//                     });
-//                 } else {
-//                     place.pageId = data.query.allpages[0].pageid;
-//                 };                
-//                 getWikipediaPhotos(place);
-//             }
-//         });
-//     });
-// };
-
-// function getWikipediaPhotos(place){
-//     var searchUrl = 'https://en.wikipedia.org/w/api.php';
-//     jQuery.ajax({
-//         url: searchUrl,
-//         data: {
-//             action: 'query',
-//             pageids: place.pageId,
-//             prop: 'info|pageimages|images|imageinfo|description|extracts',
-//             //exlimit: 1,
-//             explaintext: true,
-//             // inprop: 'url',
-//             // imlimit: 3,
-//             // iiprop: 'url',
-//             // iiurlwidth: 300,
-//             format: 'json',
-//             formatversion: 2,
-//             origin: '*'
-//         },
-//         error: function() {
-//             alert('Wikipedia API failed to return place description.');
-//         },
-//         success: function(data) {
-//             console.log(data);
-//         }
-//     });
-// }
-
 function setPlaceDetails(place){
     var searchUrl = 'https://api.foursquare.com/v2/venues/' + place.id;
     jQuery.ajax({
@@ -227,23 +168,33 @@ function setMarkers(places){
         marker.addListener('click', function(){
             map.panTo(marker.getPosition());
             toggleMarkerAnimation(marker);
-
-            var description = place.description ? place.description : 'Sorry, no description available.';
-            var infoWindowContent = '<h6 class="info-heading">' + place.name + '</h6>' +
-                '<img class="info-img" src="' + place.photos[0] + '" alt="Location image" />' +
-                '<p class="info-description">' + description + '</p>' + 
-                '<p class="info-attribution">Source: Foursquare.com</p>';
-
-            var infowindow = new google.maps.InfoWindow({
-                content: infoWindowContent
-            });
+            openInfoWindow(place);
             
-            infowindow.open(map, marker);
         })
         // Set a 'marker' property for each place.
         place.marker = marker;
     });
 };
+
+function openInfoWindow(place){
+    if (lastOpenedInfoWindow) {
+        lastOpenedInfoWindow.close();
+    };
+
+    var description = place.description ? place.description : 'Sorry, no description available.';
+    var infoWindowContent = '<h6 class="info-heading">' + place.name + '</h6>' +
+        '<img class="info-img" src="' + place.photos[0] + '" alt="Location image" />' +
+        '<p class="info-description">' + description + '</p>' + 
+        '<p class="info-attribution">Source: Foursquare.com</p>';
+
+    var infowindow = new google.maps.InfoWindow({
+        content: infoWindowContent
+    });
+
+    lastOpenedInfoWindow = infowindow;
+    
+    infowindow.open(map, place.marker);
+}
 
 // Shows all marker on map.
 function showAllMarkers(places, map) {
@@ -287,6 +238,7 @@ var appViewModel = function(places, map){
     self.focusOnMarker = function(place) {
         map.panTo(place.getLocation());
         toggleMarkerAnimation(place.marker);
+        openInfoWindow(place)
     };
     self.filteredList = ko.computed(function(){
         if (!self.searchString()) {
