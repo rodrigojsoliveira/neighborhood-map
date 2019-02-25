@@ -1,9 +1,10 @@
 // ******* Constants and Global Variables *******
 
-// Set the 'INITIAL_MAP_ADDRESS' string to any valid location or address.
+// Set the 'MAP_ADDRESS' string to any valid location or address.
 // This allows developers to configure the initial map position. Points of
 // interest will be located close to this location.
-const INITIAL_MAP_ADDRESS = "Firenze, Italy";
+const MAP_ADDRESS = "Florence, Italy";
+const MAP_CITY = "Florence";
 
 // Search radius (in meters) used to limit Google Places API search results.
 const SEARCH_RADIUS = 4000; 
@@ -19,7 +20,9 @@ var Place = function(id, name, latitude, longitude){
     this.name = name;
     this.latitude = latitude;
     this.longitude = longitude;
+    this.pageId = '';
     this.photos = [];
+    this.description = '';
     this.getLocation = function(){
         return {lat: this.latitude, lng: this.longitude};
     };
@@ -31,13 +34,13 @@ var Place = function(id, name, latitude, longitude){
 
 // Callback function used by Google Maps API to initialize the map area.
 function initMap() {
-    // Create Geocoder object to convert 'INITIAL_MAP_ADDRESS'
+    // Create Geocoder object to convert 'MAP_ADDRESS'
     // into lat/lng values.
     var geocoder = new google.maps.Geocoder();
     
-    // Get the lat/lng values for 'INITIAL_MAP_ADDRESS'.
+    // Get the lat/lng values for 'MAP_ADDRESS'.
     geocoder.geocode({
-        address: INITIAL_MAP_ADDRESS
+        address: MAP_ADDRESS
     }, function(results, status){
         if (status == 'OK') {
             // Variable initialMapLatLng will hold the geocode for the initialMapAdress.
@@ -52,21 +55,21 @@ function initMap() {
                 center: initialMapLatLng,
                 zoom: MAP_ZOOM
             });
-            getPointsOfInterest();
+            getFoursquareVenues();
             resizeMapArea();
         } else {
-            alert('Geocoding API failed to geocode ' + INITIAL_MAP_ADDRESS);
+            alert('Geocoding API failed to geocode ' + MAP_ADDRESS);
         }
     });    
 };
 
-function getPointsOfInterest(){
+function getFoursquareVenues(){
     // Foursquare Search for Venues API call.
     var searchUrl = 'https://api.foursquare.com/v2/venues/search';
     jQuery.ajax({
         url: searchUrl,
         data: {
-            near: INITIAL_MAP_ADDRESS,
+            near: MAP_ADDRESS,
             radius: SEARCH_RADIUS,
             limit: 5,
             v: FOURSQUARE_API_VERSION,
@@ -81,16 +84,103 @@ function getPointsOfInterest(){
         success: function(data) {
             var places = [];
             $.each(data.response.venues, function(index, venue){
+                if (venue.name.indexOf('(') > 0) {
+                    venue.name = venue.name.substring(0,venue.name.indexOf('(')).trim();
+                };
                 var place = new Place(venue.id,
                                       venue.name,
                                       venue.location.lat,
                                       venue.location.lng);
                 places.push(place);
+                setPlaceDetails(place)
                 setPlacePhotos(place);
+                // getWikipediaPageIds(places);
+                
+                
             });
             setMarkers(places);
             // Initialize Knockout after all asynchronous calls are done.
             ko.applyBindings(new appViewModel(places, map));
+        }
+    });
+};
+
+// function getWikipediaPageIds(places){
+//     var searchUrl = 'https://en.wikipedia.org/w/api.php'
+//     $.each(places, function(index, place){
+//         jQuery.ajax({
+//             url: searchUrl,
+//             data: {
+//                 action: 'query',
+//                 list: 'allpages',
+//                 format: 'json',
+//                 aplimit: 5,
+//                 apprefix: place.name,
+//                 origin: '*'
+//             },
+//             error: function() {
+//                 alert('Wikipedia API failed to return place information.');
+//             },
+//             success: function(data) {
+//                 if (data.query.allpages.length > 1) {
+//                     $.each(data.query.allpages, function(index, page){
+//                         if(page.title.toLowerCase().includes(MAP_CITY.toLowerCase())){
+//                             place.pageId = data.query.allpages[0].pageid;
+//                             return false;        
+//                         };
+//                     });
+//                 } else {
+//                     place.pageId = data.query.allpages[0].pageid;
+//                 };                
+//                 getWikipediaPhotos(place);
+//             }
+//         });
+//     });
+// };
+
+// function getWikipediaPhotos(place){
+//     var searchUrl = 'https://en.wikipedia.org/w/api.php';
+//     jQuery.ajax({
+//         url: searchUrl,
+//         data: {
+//             action: 'query',
+//             pageids: place.pageId,
+//             prop: 'info|pageimages|images|imageinfo|description|extracts',
+//             //exlimit: 1,
+//             explaintext: true,
+//             // inprop: 'url',
+//             // imlimit: 3,
+//             // iiprop: 'url',
+//             // iiurlwidth: 300,
+//             format: 'json',
+//             formatversion: 2,
+//             origin: '*'
+//         },
+//         error: function() {
+//             alert('Wikipedia API failed to return place description.');
+//         },
+//         success: function(data) {
+//             console.log(data);
+//         }
+//     });
+// }
+
+function setPlaceDetails(place){
+    var searchUrl = 'https://api.foursquare.com/v2/venues/' + place.id;
+    jQuery.ajax({
+        url: searchUrl,
+        data: {
+            v: FOURSQUARE_API_VERSION,
+            client_id: FOURSQUARE_CLIENT_ID,
+            client_secret: FOURSQUARE_CLIENT_SECRET
+        },
+        dataType: 'json',
+        error: function() {
+            alert('Foursquare API failed to return venue details.');
+        },
+        success: function(data) {
+            place.description = data.response.venue.description;
+            console.log(place.description);
         }
     });
 };
@@ -115,7 +205,7 @@ function setPlacePhotos(place) {
             $.each(data.response.photos.items, function(index, item){
                 var prefix = item.prefix;
                 var suffix = item.suffix;
-                var size = '300x100';
+                var size = 'width300';
                 var photoURL = prefix + size + suffix;
                 photos.push(photoURL);
             });
@@ -138,8 +228,11 @@ function setMarkers(places){
             map.panTo(marker.getPosition());
             toggleMarkerAnimation(marker);
 
-            var infoWindowContent = '<h6>' + place.name + '</h6>' +
-                '<img src="' + place.photos[0] + '" alt="Location image" />';
+            var description = place.description ? place.description : 'Sorry, no description available.';
+            var infoWindowContent = '<h6 class="info-heading">' + place.name + '</h6>' +
+                '<img class="info-img" src="' + place.photos[0] + '" alt="Location image" />' +
+                '<p class="info-description">' + description + '</p>' + 
+                '<p class="info-attribution">Source: Foursquare.com</p>';
 
             var infowindow = new google.maps.InfoWindow({
                 content: infoWindowContent
@@ -188,7 +281,7 @@ function resizeMapArea() {
 // Application ViewModel
 var appViewModel = function(places, map){
     var self = this;
-    self.neighborhood = INITIAL_MAP_ADDRESS;
+    self.neighborhood = MAP_ADDRESS;
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {

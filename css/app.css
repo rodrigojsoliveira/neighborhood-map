@@ -24,3 +24,16 @@ html, body {
     overflow-y: scroll;
     overflow-x: hidden;
 }
+
+.info-description {
+    margin-top: 5px;
+    max-width: 300px;
+    text-align: justify;
+    font-size: 0.9rem;
+}
+
+.info-attribution {
+    font-size: 0.7rem;
+    text-align: right;
+    font-weight: 500;
+}
