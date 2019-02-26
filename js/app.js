@@ -64,6 +64,8 @@ function initMap() {
     });    
 };
 
+
+
 function getFoursquareVenues(){
     // Foursquare Search for Venues API call.
     var searchUrl = 'https://api.foursquare.com/v2/venues/search';
@@ -233,6 +235,7 @@ function resizeMapArea() {
 var appViewModel = function(places, map){
     var self = this;
     self.neighborhood = MAP_ADDRESS;
+    self.filterText = ko.observable('Filter');
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {
@@ -253,4 +256,15 @@ var appViewModel = function(places, map){
             })
         }
     });
+    self.setClearText = function() {
+        $("#filter-button").text('Clear');
+        $("#filter-button").toggleClass("pointerCursor");
+    };
+    self.setFilterText = function(){
+        $("#filter-button").text('Filter');
+        $("#filter-button").toggleClass("pointerCursor");
+    };
+    self.clearFilter = function(){
+        self.searchString('');
+    }
 };
