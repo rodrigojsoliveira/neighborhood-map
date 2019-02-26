@@ -28,7 +28,7 @@
                     </div>
                 </div>
                 <div class="row" id="list-places">
-                    <div class="list-group" data-bind="foreach: filteredList">
+                    <div id="item-list" class="list-group list-group-flush" data-bind="foreach: filteredList">
                         <a class="list-group-item list-group-item-action" data-bind="text: name, click: $parent.focusOnMarker"></a>
                     </div>
                 </div>

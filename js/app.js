@@ -123,7 +123,6 @@ function setPlaceDetails(place){
         },
         success: function(data) {
             place.description = data.response.venue.description;
-            console.log(place.description);
         }
     });
 };
@@ -168,7 +167,6 @@ function setMarkers(places){
         });
         //Create a click listener for the marker.
         marker.addListener('click', function(){
-            map.panTo(marker.getPosition());
             toggleMarkerAnimation(marker);
             openInfoWindow(place);
             
@@ -196,7 +194,7 @@ function openInfoWindow(place){
     lastOpenedInfoWindow = infowindow;
     
     infowindow.open(map, place.marker);
-}
+};
 
 // Shows all marker on map.
 function showAllMarkers(places, map) {
@@ -239,7 +237,6 @@ var appViewModel = function(places, map){
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {
-        map.panTo(place.getLocation());
         toggleMarkerAnimation(place.marker);
         openInfoWindow(place)
     };
@@ -266,5 +263,5 @@ var appViewModel = function(places, map){
     };
     self.clearFilter = function(){
         self.searchString('');
-    }
+    };
 };

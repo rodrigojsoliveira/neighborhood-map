@@ -43,3 +43,7 @@ html, body {
     background-color: slategray;
     color: white;
 }
+
+#item-list {
+    width: 100%;
+}
