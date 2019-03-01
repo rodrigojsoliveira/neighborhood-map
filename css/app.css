@@ -1,7 +1,23 @@
+@media (min-width: 768px) {
+    #menu-button {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    #list-area {
+        display: none;
+    }
+}
+
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+}
+
+#menu-button {
+    width: 30px;
 }
 
 #main-container, #map-container {

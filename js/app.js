@@ -74,7 +74,7 @@ function getFoursquareVenues(){
         data: {
             near: MAP_ADDRESS,
             radius: SEARCH_RADIUS,
-            limit: 5,
+            limit: 1,
             v: FOURSQUARE_API_VERSION,
             categoryId: '4d4b7104d754a06370d81259',
             client_id: FOURSQUARE_CLIENT_ID,
