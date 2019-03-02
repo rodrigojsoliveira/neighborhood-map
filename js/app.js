@@ -16,10 +16,13 @@ const FOURSQUARE_CLIENT_ID =
 const FOURSQUARE_CLIENT_SECRET =
     'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
 // Set the number of venues to be retrieved by Foursquare Venue Search API.
-const NUMBER_OF_VENUES = 5;
+const NUMBER_OF_VENUES = 10;
 
 // 'map' will hold Google Maps API´s map object.
 var map;
+
+// 'mapBounds' is used to fit all map markers on the user view.
+var mapBounds;
 
 // 'lastOpenedInfoWindow' receives an InfoWindow object. It keeps track
 // of opened info windows allowing us to close them when they are not needed.
@@ -104,7 +107,10 @@ function getFoursquareVenues(){
                 setPlaceDescription(place);
                 setPlacePhotos(place);                
             });
+            mapBounds = new google.maps.LatLngBounds();
             setMarkers(places);
+            map.fitBounds(mapBounds);
+            map.panToBounds(mapBounds);
             // Initialize Knockout after all asynchronous calls are done.
             ko.applyBindings(new appViewModel(places, map));
         }
@@ -170,6 +176,9 @@ function setMarkers(places){
             position: place.getLocation(),
             title: place.name
         });
+        var markerLoc = new google.maps.LatLng(marker.position.lat(),
+            marker.position.lng());
+        mapBounds.extend(markerLoc);
         //Create a click listener for the marker.
         marker.addListener('click', function(){
             toggleMarkerAnimation(marker);
