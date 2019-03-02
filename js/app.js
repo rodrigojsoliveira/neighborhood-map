@@ -9,6 +9,9 @@ const SEARCH_RADIUS = 4000;
 // Initial map zoom used by Google Places API.
 const MAP_ZOOM = 15;
 
+// Prevents zooming to far in when there is only one marker set.
+const MAP_MAX_ZOOM = 17;
+
 // Foursquare API constants.
 const FOURSQUARE_API_VERSION = 20190223;
 const FOURSQUARE_CLIENT_ID =
@@ -62,7 +65,8 @@ function initMap() {
             map = new google.maps.Map($("#map")[0],
             {
                 center: initialMapLatLng,
-                zoom: MAP_ZOOM
+                zoom: MAP_ZOOM,
+                maxZoom: MAP_MAX_ZOOM
             });
             getFoursquareVenues();
             resizeMapArea();
@@ -109,12 +113,17 @@ function getFoursquareVenues(){
             });
             mapBounds = new google.maps.LatLngBounds();
             setMarkers(places);
-            map.fitBounds(mapBounds);
-            map.panToBounds(mapBounds);
+            panAndZoomToFitMarkers(mapBounds);
             // Initialize Knockout after all asynchronous calls are done.
             ko.applyBindings(new appViewModel(places, map));
         }
     });
+}
+
+// Adjust map's pan and zoom settings to fit all markers on screen.
+function panAndZoomToFitMarkers(mapBounds){
+    map.fitBounds(mapBounds);
+    map.panToBounds(mapBounds);
 }
 
 // Function 'setPlaceDescription' will save each venue's description.
@@ -264,17 +273,27 @@ var appViewModel = function(places, map){
         // Show all markers if no search string is typed.
         if (!self.searchString()) {
             showAllMarkers(self.placeList(), map);
+            panAndZoomToFitMarkers(mapBounds);
             return self.placeList();
         } else {
             // Filter placeList according to user input in 'searchString'.
-            return ko.utils.arrayFilter(self.placeList(), function(place){
+            var filteredMapBounds = new google.maps.LatLngBounds();
+            var filteredPlaces =
+                ko.utils.arrayFilter(self.placeList(), function(place){
                 var lowerCaseName = place.name.toLowerCase();
                 var lowerCaseSearchString = self.searchString().toLowerCase();
                 if (!lowerCaseName.includes(lowerCaseSearchString)){
                     place.marker.setMap(null);
+                } else {
+                    var markerLoc =
+                        new google.maps.LatLng(place.marker.position.lat(),
+                        place.marker.position.lng());
+                    filteredMapBounds.extend(markerLoc);
                 }
                 return lowerCaseName.includes(lowerCaseSearchString);
             });
+            panAndZoomToFitMarkers(filteredMapBounds);
+            return filteredPlaces;
         }
     });
     self.setClearText = function() {
