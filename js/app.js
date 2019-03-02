@@ -270,6 +270,10 @@ var appViewModel = function(places, map){
         openInfoWindow(place);
     };
     self.filteredList = ko.computed(function(){
+        // Close any opened info windows.
+        if (lastOpenedInfoWindow){
+            lastOpenedInfoWindow.close();
+        }
         // Show all markers if no search string is typed.
         if (!self.searchString()) {
             showMarkers(self.placeList(), map);
