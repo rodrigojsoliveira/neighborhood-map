@@ -237,6 +237,11 @@ var appViewModel = function(places, map){
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {
+        //Hide list menu if necessary
+        if($(window).width() < 768){
+            $('#list-area').toggleClass('showElement');
+            $('#map-container').toggleClass('hideElement');
+        };
         toggleMarkerAnimation(place.marker);
         openInfoWindow(place)
     };
@@ -272,6 +277,5 @@ var appViewModel = function(places, map){
             $('#list-area').removeClass('showElement');
             $('#map-container').removeClass('hideElement');
         };
-    
     };
 };
