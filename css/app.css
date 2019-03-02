@@ -2,12 +2,23 @@
     #menu-button {
         display: none;
     }
+    #map-container {
+        display: inline
+    }
 }
 
 @media (max-width: 767px) {
     #list-area {
         display: none;
     }
+}
+
+.hideElement {
+    display: none;
+}
+
+.showElement {
+    display: inline !important;
 }
 
 html, body {

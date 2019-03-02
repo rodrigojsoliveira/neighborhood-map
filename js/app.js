@@ -264,4 +264,14 @@ var appViewModel = function(places, map){
     self.clearFilter = function(){
         self.searchString('');
     };
+    self.toggleMenu = function(){
+        if($(window).width() < 768){
+            $('#list-area').toggleClass('showElement');
+            $('#map-container').toggleClass('hideElement');
+        } else {
+            $('#list-area').removeClass('showElement');
+            $('#map-container').removeClass('hideElement');
+        };
+    
+    };
 };
