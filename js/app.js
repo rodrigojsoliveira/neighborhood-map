@@ -108,8 +108,8 @@ function getFoursquareVenues(){
                                       venue.location.lat,
                                       venue.location.lng);
                 places.push(place);
-                setPlaceDescription(place);
-                setPlacePhotos(place);                
+                //setPlaceDescription(place);
+                //setPlacePhotos(place);                
             });
             mapBounds = new google.maps.LatLngBounds();
             setMarkers(places);
@@ -217,8 +217,8 @@ function openInfoWindow(place){
     infowindow.open(map, place.marker);
 }
 
-// Shows all marker on map.
-function showAllMarkers(places, map) {
+// Shows marker on map.
+function showMarkers(places, map) {
     $.each(places, function(index, place){
         place.marker.setMap(map);
     });
@@ -272,19 +272,27 @@ var appViewModel = function(places, map){
     self.filteredList = ko.computed(function(){
         // Show all markers if no search string is typed.
         if (!self.searchString()) {
-            showAllMarkers(self.placeList(), map);
+            showMarkers(self.placeList(), map);
             panAndZoomToFitMarkers(mapBounds);
             return self.placeList();
         } else {
-            // Filter placeList according to user input in 'searchString'.
+            // Set new map bounds variable for filtered markers.
             var filteredMapBounds = new google.maps.LatLngBounds();
+            // Filter placeList according to user input in 'searchString'.
             var filteredPlaces =
                 ko.utils.arrayFilter(self.placeList(), function(place){
                 var lowerCaseName = place.name.toLowerCase();
                 var lowerCaseSearchString = self.searchString().toLowerCase();
+                // Check if place name contains the search string.
                 if (!lowerCaseName.includes(lowerCaseSearchString)){
+                    // Remove marker from map if name does not contain
+                    // search string. This marker will not be included in
+                    // the new 'filteredMapBounds' variable.
                     place.marker.setMap(null);
                 } else {
+                    // If the search string is found,
+                    // add place to new map bound. This will allow zooming
+                    // and panning to filtered markers.
                     var markerLoc =
                         new google.maps.LatLng(place.marker.position.lat(),
                         place.marker.position.lng());
@@ -292,6 +300,7 @@ var appViewModel = function(places, map){
                 }
                 return lowerCaseName.includes(lowerCaseSearchString);
             });
+            showMarkers(filteredPlaces, map);
             panAndZoomToFitMarkers(filteredMapBounds);
             return filteredPlaces;
         }
