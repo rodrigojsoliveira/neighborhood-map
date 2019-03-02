@@ -1,51 +1,56 @@
-// ******* Constants and Global Variables *******
-
-// Set the 'MAP_ADDRESS' string to any valid location or address.
+// Set 'MAP_ADDRESS' to any valid location.
 // This allows developers to configure the initial map position. Points of
 // interest will be located close to this location.
-const MAP_ADDRESS = "Florence, Italy";
-const MAP_CITY = "Florence";
+const MAP_ADDRESS = 'Central Park, New York';
 
-// Search radius (in meters) used to limit Google Places API search results.
-const SEARCH_RADIUS = 4000; 
+// Search radius (in meters) is used to limit Google Places API search results.
+const SEARCH_RADIUS = 4000;
+
+// Initial map zoom used by Google Places API.
 const MAP_ZOOM = 15;
+
+// Foursquare API constants.
 const FOURSQUARE_API_VERSION = 20190223;
-const FOURSQUARE_CLIENT_ID = 'MHIUE3JSG2LWINMXBLQX1PDXJ2NOIQDLZOW2ZCQ2NKDFJNB4';
-const FOURSQUARE_CLIENT_SECRET = 'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
+const FOURSQUARE_CLIENT_ID =
+    'MHIUE3JSG2LWINMXBLQX1PDXJ2NOIQDLZOW2ZCQ2NKDFJNB4';
+const FOURSQUARE_CLIENT_SECRET =
+    'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
+// Set the number of venues to be retrieved by Foursquare Venue Search API.
+const NUMBER_OF_VENUES = 5;
+
+// 'map' will hold Google Maps API´s map object.
 var map;
+
+// 'lastOpenedInfoWindow' receives an InfoWindow object. It keeps track
+// of opened info windows allowing us to close them when they are not needed.
 var lastOpenedInfoWindow;
 
-// Defines the properties of a place
+// Place object definition
 var Place = function(id, name, latitude, longitude){
     this.id = id;
     this.name = name;
     this.latitude = latitude;
     this.longitude = longitude;
-    this.pageId = '';
     this.photos = [];
     this.description = '';
     this.getLocation = function(){
         return {lat: this.latitude, lng: this.longitude};
     };
-    this.getMarkerInfo = function() {
-        return {name: this.name, location: this.getLocation(), photos: this.photos};
-    };
-    this.marker;
+    this.marker = '';
 };
 
 // Callback function used by Google Maps API to initialize the map area.
 function initMap() {
     // Create Geocoder object to convert 'MAP_ADDRESS'
-    // into lat/lng values.
+    // into latlng values.
     var geocoder = new google.maps.Geocoder();
-    
+
     // Get the lat/lng values for 'MAP_ADDRESS'.
     geocoder.geocode({
         address: MAP_ADDRESS
     }, function(results, status){
         if (status == 'OK') {
-            // Variable initialMapLatLng will hold the geocode for the initialMapAdress.
-            // Set initialMapLatLng with retrieved values.
+            // 'initialMapLatLng' will hold the geocode for MAP_ADDRESS.
             var initialMapLatLng = results[0].geometry.location;
             
             // Since JQuery´s id selector returns a collection and the Map
@@ -62,19 +67,18 @@ function initMap() {
             alert('Geocoding API failed to geocode ' + MAP_ADDRESS);
         }
     });    
-};
+}
 
-
-
+// This function uses Foursquare's API to fetch data on points of interest
+// close to our MAP_ADDRESS.
 function getFoursquareVenues(){
-    // Foursquare Search for Venues API call.
     var searchUrl = 'https://api.foursquare.com/v2/venues/search';
     jQuery.ajax({
         url: searchUrl,
         data: {
             near: MAP_ADDRESS,
             radius: SEARCH_RADIUS,
-            limit: 1,
+            limit: NUMBER_OF_VENUES,
             v: FOURSQUARE_API_VERSION,
             categoryId: '4d4b7104d754a06370d81259',
             client_id: FOURSQUARE_CLIENT_ID,
@@ -87,28 +91,28 @@ function getFoursquareVenues(){
         success: function(data) {
             var places = [];
             $.each(data.response.venues, function(index, venue){
+                // Remove unwanted text inside parenthesis from venue names.
                 if (venue.name.indexOf('(') > 0) {
-                    venue.name = venue.name.substring(0,venue.name.indexOf('(')).trim();
-                };
+                    venue.name =
+                        venue.name.substring(0,venue.name.indexOf('(')).trim();
+                }
                 var place = new Place(venue.id,
                                       venue.name,
                                       venue.location.lat,
                                       venue.location.lng);
                 places.push(place);
-                setPlaceDetails(place)
-                setPlacePhotos(place);
-                // getWikipediaPageIds(places);
-                
-                
+                setPlaceDescription(place);
+                setPlacePhotos(place);                
             });
             setMarkers(places);
             // Initialize Knockout after all asynchronous calls are done.
             ko.applyBindings(new appViewModel(places, map));
         }
     });
-};
+}
 
-function setPlaceDetails(place){
+// Function 'setPlaceDescription' will save each venue's description.
+function setPlaceDescription(place){
     var searchUrl = 'https://api.foursquare.com/v2/venues/' + place.id;
     jQuery.ajax({
         url: searchUrl,
@@ -125,11 +129,12 @@ function setPlaceDetails(place){
             place.description = data.response.venue.description;
         }
     });
-};
+}
 
+// 'setPlacePhotos' will save photos from each venue.
 function setPlacePhotos(place) {
-    // Foursquare Search for Venues API call.
-    var searchUrl = 'https://api.foursquare.com/v2/venues/' + place.id + '/photos';
+    var searchUrl = 'https://api.foursquare.com/v2/venues/' + place.id +
+        '/photos';
     jQuery.ajax({
         url: searchUrl,
         data: {
@@ -154,7 +159,7 @@ function setPlacePhotos(place) {
             place.photos = photos;
         }
     });
-};
+}
 
 // Set markers representing each point of interest on the map.
 function setMarkers(places){
@@ -169,40 +174,39 @@ function setMarkers(places){
         marker.addListener('click', function(){
             toggleMarkerAnimation(marker);
             openInfoWindow(place);
-            
-        })
-        // Set a 'marker' property for each place.
+        });
         place.marker = marker;
     });
-};
+}
 
+// Opens an infowindow with data from a specific venue.
 function openInfoWindow(place){
     if (lastOpenedInfoWindow) {
         lastOpenedInfoWindow.close();
-    };
-
-    var description = place.description ? place.description : 'Sorry, no description available.';
-    var infoWindowContent = '<h6 class="info-heading">' + place.name + '</h6>' +
-        '<img class="info-img" src="' + place.photos[0] + '" alt="Location image" />' +
+    }
+    // If there is no description available for a venue, tell the user so.
+    var description = place.description ? place.description : 'Sorry, no ' +
+        'description available.';
+    var infoWindowContent = '<h6 class="info-heading">' +
+        place.name + '</h6>' + '<img class="info-img" src="' +
+        place.photos[0] + '" alt="Location image" />' +
         '<p class="info-description">' + description + '</p>' + 
         '<p class="info-attribution">Source: Foursquare.com</p>';
-
     var infowindow = new google.maps.InfoWindow({
         content: infoWindowContent
     });
-
     lastOpenedInfoWindow = infowindow;
-    
     infowindow.open(map, place.marker);
-};
+}
 
 // Shows all marker on map.
 function showAllMarkers(places, map) {
     $.each(places, function(index, place){
         place.marker.setMap(map);
     });
-};
+}
 
+// Animate selected marker.
 function toggleMarkerAnimation(marker) {
     if (marker.getAnimation() !== null) {
         marker.setAnimation(null);
@@ -211,8 +215,8 @@ function toggleMarkerAnimation(marker) {
         setTimeout(function(){
             marker.setAnimation(null);
         }, 1500);
-    };
-};
+    }
+}
 
 // This function is used to resize the Map area properly. It fixes 
 // Google Maps' div element being rendered with its height property set to 0
@@ -227,7 +231,7 @@ function resizeMapArea() {
     
         $('#map').css('height', (windowHeight - topOffset));
     }).resize();
-};
+}
 
 // Application ViewModel
 var appViewModel = function(places, map){
@@ -237,25 +241,31 @@ var appViewModel = function(places, map){
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {
-        //Hide list menu if necessary
+        // In small screens, the list area should hide after the user
+        // clicks a list item. The if statement below will hide it, displaying
+        // the map container in full screen.
         if($(window).width() < 768){
             $('#list-area').toggleClass('showElement');
             $('#map-container').toggleClass('hideElement');
-        };
+        }
         toggleMarkerAnimation(place.marker);
-        openInfoWindow(place)
+        openInfoWindow(place);
     };
     self.filteredList = ko.computed(function(){
+        // Show all markers if no search string is typed.
         if (!self.searchString()) {
             showAllMarkers(self.placeList(), map);
             return self.placeList();
         } else {
+            // Filter placeList according to user input in 'searchString'.
             return ko.utils.arrayFilter(self.placeList(), function(place){
-                if (!place.name.toLowerCase().includes(self.searchString().toLowerCase())){
+                var lowerCaseName = place.name.toLowerCase();
+                var lowerCaseSearchString = self.searchString().toLowerCase();
+                if (!lowerCaseName.includes(lowerCaseSearchString)){
                     place.marker.setMap(null);
                 }
-                return place.name.toLowerCase().includes(self.searchString().toLowerCase());
-            })
+                return lowerCaseName.includes(lowerCaseSearchString);
+            });
         }
     });
     self.setClearText = function() {
@@ -276,6 +286,6 @@ var appViewModel = function(places, map){
         } else {
             $('#list-area').removeClass('showElement');
             $('#map-container').removeClass('hideElement');
-        };
+        }
     };
 };
