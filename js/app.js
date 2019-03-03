@@ -1,3 +1,5 @@
+'use strict';
+
 // Set 'MAP_ADDRESS' to any valid location.
 // This allows developers to configure the initial map position. Points of
 // interest will be located close to this location.
@@ -19,7 +21,7 @@ const FOURSQUARE_CLIENT_ID =
 const FOURSQUARE_CLIENT_SECRET =
     'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
 // Set the number of venues to be retrieved by Foursquare Venue Search API.
-const NUMBER_OF_VENUES = 20;
+const NUMBER_OF_VENUES = 1;
 
 // 'map' will hold Google Maps API´s map object.
 var map;
