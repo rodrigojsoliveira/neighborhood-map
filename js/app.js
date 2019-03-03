@@ -280,8 +280,8 @@ var appViewModel = function(places, map){
         // clicks a list item. The if statement below will hide it, displaying
         // the map container in full screen.
         if($(window).width() < 768){
-            $('#list-area').toggleClass('showElement');
-            $('#map-container').toggleClass('hideElement');
+            $('.list-area').toggleClass('showElement');
+            $('.map-container').toggleClass('hideElement');
         }
         panAndZoomToFitMarkers(!filteredMapBounds ?
             mapBounds : filteredMapBounds);
@@ -341,11 +341,11 @@ var appViewModel = function(places, map){
     };
     self.toggleMenu = function(){
         if($(window).width() < 768){
-            $('#list-area').toggleClass('showElement');
-            $('#map-container').toggleClass('hideElement');
+            $('.list-area').toggleClass('showElement');
+            $('.map-container').toggleClass('hideElement');
         } else {
-            $('#list-area').removeClass('showElement');
-            $('#map-container').removeClass('hideElement');
+            $('.list-area').removeClass('showElement');
+            $('.map-container').removeClass('hideElement');
         }
         panAndZoomToFitMarkers(!filteredMapBounds ?
             mapBounds : filteredMapBounds);

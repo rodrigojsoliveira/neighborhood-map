@@ -1,57 +1,52 @@
-@media (min-width: 768px) {
-    #menu-button {
-        display: none;
-    }
-    #map-container {
-        display: inline
-    }
-}
-
-@media (max-width: 767px) {
-    #list-area {
-        display: none;
-    }
-}
-
 .hideElement {
     display: none;
 }
+
 
 .showElement {
     display: inline !important;
 }
 
-html, body {
+
+html,
+body {
     height: 100%;
     margin: 0;
     padding: 0;
 }
 
-#menu-button {
+
+.menu-button {
     width: 30px;
     cursor: pointer;
 }
 
-#main-container, #map-container {
+
+.main-container,
+.map-container {
     width: 100%;
     height: 90vh;
     padding: 0;
     margin: 0;
 }
 
-#list-area {
+
+.list-area {
     height: 91%;
 }
 
-#list-filter {
+
+.list-filter {
     margin: 10px 0;
 }
 
-#list-places {
+
+.list-places {
     height: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
 }
+
 
 .info-description {
     margin-top: 5px;
@@ -60,11 +55,13 @@ html, body {
     font-size: 0.9rem;
 }
 
+
 .info-attribution {
     font-size: 0.7rem;
     text-align: right;
     font-weight: 500;
 }
+
 
 .pointerCursor {
     cursor: pointer;
@@ -72,12 +69,33 @@ html, body {
     color: white;
 }
 
-#item-list {
+
+.item-list {
     width: 100%;
 }
+
 
 .info-img {
     margin-left: auto;
     margin-right: auto;
     display: block;
+}
+
+
+@media (min-width: 768px) {
+    .menu-button {
+        display: none;
+    }
+
+
+    .map-container {
+        display: inline
+    }
+}
+
+
+@media (max-width: 767px) {
+    .list-area {
+        display: none;
+    }
 }
