@@ -81,6 +81,11 @@ function initMap() {
     });    
 }
 
+// Function used to handle Google Maps API loading errors.
+function handleGoogleMapsError() {
+    alert('Google Maps Javascript API failed to load correctly.');
+}
+
 // This function uses Foursquare's API to fetch data on points of interest
 // close to our MAP_ADDRESS.
 function getFoursquareVenues(){
