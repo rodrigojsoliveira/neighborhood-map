@@ -211,9 +211,12 @@ function openInfoWindow(place){
     // If there is no description available for a venue, tell the user so.
     var description = place.description ? place.description : 'Sorry, no ' +
         'description available.';
+    // If there is no photo available, load 'No Photo Available' image.
+    var imgSource =
+        place.photos[0] ? place.photos[0] : './img/no-image-icon-23494.png';
     var infoWindowContent = '<h6 class="info-heading">' +
         place.name + '</h6>' + '<img class="info-img" src="' +
-        place.photos[0] + '" alt="Location image" />' +
+        imgSource + '" alt="Location image" />' +
         '<p class="info-description">' + description + '</p>' + 
         '<p class="info-attribution">Source: Foursquare.com</p>';
     var infowindow = new google.maps.InfoWindow({

@@ -75,3 +75,9 @@ html, body {
 #item-list {
     width: 100%;
 }
+
+.info-img {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
