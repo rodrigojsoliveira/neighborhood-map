@@ -264,7 +264,15 @@ function resizeMapArea() {
 var appViewModel = function(places, map){
     var self = this;
     self.neighborhood = MAP_ADDRESS;
-    self.filterText = ko.observable('Filter');
+    self.filterButtonText = ko.observable('Filter');
+    self.isMouseOver = ko.observable(false);
+    self.setCursor = ko.computed(function(){
+        if (self.isMouseOver()) {
+            return 'pointerCursor';
+        } else {
+            return '';
+        }
+    });
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {
@@ -321,12 +329,12 @@ var appViewModel = function(places, map){
         }
     });
     self.setClearText = function() {
-        $("#filter-button").text('Clear');
-        $("#filter-button").toggleClass("pointerCursor");
+        self.filterButtonText('Clear');
+        self.isMouseOver(true);
     };
     self.setFilterText = function(){
-        $("#filter-button").text('Filter');
-        $("#filter-button").toggleClass("pointerCursor");
+        self.filterButtonText('Filter');
+        self.isMouseOver(false);
     };
     self.clearFilter = function(){
         self.searchString('');

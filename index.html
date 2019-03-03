@@ -25,7 +25,7 @@
                 <div class="row input-group" id="list-filter">
                     <input data-bind="textInput: searchString" class="form-control" type="text" id="filter">
                     <div class="input-group-append">
-                        <span class="input-group-text" id="filter-button" data-bind="text: filterText, click: clearFilter, event: {mouseover: setClearText, mouseout: setFilterText}"></span>
+                        <span class="input-group-text" id="filter-button" data-bind="event: {mouseover: setClearText, mouseout: setFilterText}, text: filterButtonText, css: setCursor, click: clearFilter"></span>
                     </div>
                 </div>
                 <div class="row" id="list-places">
