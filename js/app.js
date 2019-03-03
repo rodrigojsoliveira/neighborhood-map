@@ -19,13 +19,16 @@ const FOURSQUARE_CLIENT_ID =
 const FOURSQUARE_CLIENT_SECRET =
     'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
 // Set the number of venues to be retrieved by Foursquare Venue Search API.
-const NUMBER_OF_VENUES = 10;
+const NUMBER_OF_VENUES = 20;
 
 // 'map' will hold Google Maps API´s map object.
 var map;
 
 // 'mapBounds' is used to fit all map markers on the user view.
 var mapBounds;
+
+// Variable used to set map bounds for filtered list items.
+var filteredMapBounds;
 
 // 'lastOpenedInfoWindow' receives an InfoWindow object. It keeps track
 // of opened info windows allowing us to close them when they are not needed.
@@ -108,8 +111,8 @@ function getFoursquareVenues(){
                                       venue.location.lat,
                                       venue.location.lng);
                 places.push(place);
-                //setPlaceDescription(place);
-                //setPlacePhotos(place);                
+                setPlaceDescription(place);
+                setPlacePhotos(place);                
             });
             mapBounds = new google.maps.LatLngBounds();
             setMarkers(places);
@@ -122,6 +125,7 @@ function getFoursquareVenues(){
 
 // Adjust map's pan and zoom settings to fit all markers on screen.
 function panAndZoomToFitMarkers(mapBounds){
+    map.setCenter(mapBounds.getCenter());
     map.fitBounds(mapBounds);
     map.panToBounds(mapBounds);
 }
@@ -266,6 +270,8 @@ var appViewModel = function(places, map){
             $('#list-area').toggleClass('showElement');
             $('#map-container').toggleClass('hideElement');
         }
+        panAndZoomToFitMarkers(!filteredMapBounds ?
+            mapBounds : filteredMapBounds);
         toggleMarkerAnimation(place.marker);
         openInfoWindow(place);
     };
@@ -281,7 +287,7 @@ var appViewModel = function(places, map){
             return self.placeList();
         } else {
             // Set new map bounds variable for filtered markers.
-            var filteredMapBounds = new google.maps.LatLngBounds();
+            filteredMapBounds = new google.maps.LatLngBounds();
             // Filter placeList according to user input in 'searchString'.
             var filteredPlaces =
                 ko.utils.arrayFilter(self.placeList(), function(place){
@@ -328,5 +334,7 @@ var appViewModel = function(places, map){
             $('#list-area').removeClass('showElement');
             $('#map-container').removeClass('hideElement');
         }
+        panAndZoomToFitMarkers(!filteredMapBounds ?
+            mapBounds : filteredMapBounds);
     };
 };
