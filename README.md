@@ -7,7 +7,7 @@ This project is part os Udacity´s Full Stack Web Developer Nanodegree.
 Just download the files or clone this repo to your computer. Open file `index.html` to run the app. No installations or setups are necessary.
 
 ## Changing Neighborhoods
-If you wish to change the initial location around which venues are searched, open file `app.js` and change the value of 'MAP_ADDRESS' constant to any valid address.
+If you wish to change the initial location around which venues are searched, open file `app.js` and change the value of `MAP_ADDRESS` constant to any valid address.
 
 ## APIs
 This app uses [Google Maps Javascript API](https://developers.google.com/maps/documentation/javascript/tutorial) and [Foursquare API](https://developer.foursquare.com/) to retrieve venue photos and details.
