@@ -270,23 +270,31 @@ var appViewModel = function(places, map){
     var self = this;
     self.neighborhood = MAP_ADDRESS;
     self.filterButtonText = ko.observable('Filter');
-    self.isMouseOver = ko.observable(false);
+    self.isMouseOverFilterButton = ko.observable(false);
     self.setCursor = ko.computed(function(){
-        if (self.isMouseOver()) {
+        if (self.isMouseOverFilterButton()) {
             return 'pointerCursor';
         } else {
             return '';
         }
     });
+    self.viewWidth = ko.observable($(window).width());
+    self.setViewWidth = ko.computed(function(){
+        $(window).resize(function(){
+            self.viewWidth($(window).width());
+        })
+    });
+    self.listVisible = ko.observable('');
+    self.mapVisible = ko.observable('');
     self.placeList = ko.observableArray(places);
     self.searchString = ko.observable();
     self.focusOnMarker = function(place) {
         // In small screens, the list area should hide after the user
         // clicks a list item. The if statement below will hide it, displaying
         // the map container in full screen.
-        if($(window).width() < 768){
-            $('.list-area').toggleClass('showElement');
-            $('.map-container').toggleClass('hideElement');
+        if(self.viewWidth() < 768){
+            self.mapVisible(!self.mapVisible());
+            self.listVisible(!self.listVisible());
         }
         panAndZoomToFitMarkers(!filteredMapBounds ?
             mapBounds : filteredMapBounds);
@@ -335,22 +343,30 @@ var appViewModel = function(places, map){
     });
     self.setClearText = function() {
         self.filterButtonText('Clear');
-        self.isMouseOver(true);
+        self.isMouseOverFilterButton(true);
     };
     self.setFilterText = function(){
         self.filterButtonText('Filter');
-        self.isMouseOver(false);
+        self.isMouseOverFilterButton(false);
     };
     self.clearFilter = function(){
         self.searchString('');
     };
     self.toggleMenu = function(){
-        if($(window).width() < 768){
-            $('.list-area').toggleClass('showElement');
-            $('.map-container').toggleClass('hideElement');
+        if(self.viewWidth() < 768){
+            if (self.mapVisible()=='') {
+                self.mapVisible('hideElement');
+            } else {
+                self.mapVisible('');
+            }
+            if (self.listVisible()=='') {
+                self.listVisible('showElement');
+            } else {
+                self.listVisible('');
+            }
         } else {
-            $('.list-area').removeClass('showElement');
-            $('.map-container').removeClass('hideElement');
+            self.mapVisible('');
+            self.listVisible('');
         }
         panAndZoomToFitMarkers(!filteredMapBounds ?
             mapBounds : filteredMapBounds);

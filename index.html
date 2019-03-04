@@ -17,7 +17,7 @@
             </nav>
         </header>
         <div class="row main-container">
-            <div class="col-md-3 list-area">
+            <div class="col-md-3 list-area" data-bind="css: listVisible">
                 <div class="row input-group list-filter">
                     <input data-bind="textInput: searchString" class="form-control" type="text" id="filter">
                     <div class="input-group-append">
@@ -30,7 +30,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-9 map-container">
+            <div class="col-md-9 map-container" data-bind="css: mapVisible">
                 <div id="map"></div>
             </div>
         </div>
