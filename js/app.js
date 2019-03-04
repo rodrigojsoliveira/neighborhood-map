@@ -21,7 +21,7 @@ const FOURSQUARE_CLIENT_ID =
 const FOURSQUARE_CLIENT_SECRET =
     'VTPCTEWLFVHAWX3VW3W1O4QHZAQXEUXDSUBIOXNVFYSDNIOM';
 // Set the number of venues to be retrieved by Foursquare Venue Search API.
-const NUMBER_OF_VENUES = 1;
+const NUMBER_OF_VENUES = 10;
 
 // 'map' will hold Google Maps API´s map object.
 var map;
@@ -42,6 +42,7 @@ var Place = function(id, name, latitude, longitude){
     this.name = name;
     this.latitude = latitude;
     this.longitude = longitude;
+    this.url = '';
     this.photos = [];
     this.description = '';
     this.getLocation = function(){
@@ -152,7 +153,10 @@ function setPlaceDescription(place){
             alert('Foursquare API failed to return venue details.');
         },
         success: function(data) {
-            place.description = data.response.venue.description;
+            var venue = data.response.venue;
+            place.description = venue.description;
+            var venueUrl = venue.canonicalUrl + '?ref=' + FOURSQUARE_CLIENT_ID;
+            place.url = venueUrl;
         }
     });
 }
@@ -219,8 +223,9 @@ function openInfoWindow(place){
     // If there is no photo available, load 'No Photo Available' image.
     var imgSource =
         place.photos[0] ? place.photos[0] : './img/no-image-icon-23494.png';
-    var infoWindowContent = '<h6 class="info-heading">' +
-        place.name + '</h6>' + '<img class="info-img" src="' +
+    var infoWindowContent = '<a href="' + place.url + '" ' +
+        'class="info-heading" target="_blank">' +
+        place.name + '</a>' + '<img class="info-img" src="' +
         imgSource + '" alt="Location image" />' +
         '<p class="info-description">' + description + '</p>' + 
         '<p class="info-attribution">Source: Foursquare.com</p>';
